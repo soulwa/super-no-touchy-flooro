@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Through
+  - Ground
+  - Hazard
+  - Goal
+  - Powerup
+  - Yoku
+  - Ice
+  - Gravity Switch
+  - Entity Switch
+  - Quicksand
+  - Water
+  - Checkpoint
+  - Final
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Ground
+  - Player
+  - Through
+  - Portal
+  - Item
+  - GWater
+  - Vanish
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Goal
+    uniqueID: 2419251877
+    locked: 0
