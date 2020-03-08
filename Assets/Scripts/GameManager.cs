@@ -23,9 +23,6 @@ public class GameManager : MonoBehaviour
     private Stack<GameState> stateStack = new Stack<GameState>();
     private SaveFile saveFile;
     private string dataPath;
-
-    public bool playerDead;
-
     public static GameManager instance = null;
 
     private int levelIndex;
@@ -66,7 +63,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-#if true
+#if UNITY_EDITOR
         if (Input.GetAxisRaw("Warp") != 0 && stateStack.Peek() != GameState.LOADING)
         {
             int warpIndex = levelIndex + (int)Input.GetAxisRaw("Warp");
@@ -160,34 +157,6 @@ public class GameManager : MonoBehaviour
 
                     return;
                 }
-                if (playerDead && classicMode)
-                {
-                    lives--;
-                    EntityManager.instance.UpdateDeathCount(lives);
-                    saveFile.lifeCount = lives;
-                    GameSaver.SaveData(saveFile, dataPath);
-                    EntityManager.instance.ResetLevelEntities();
-                    playerDead = false;
-
-                    if (lives <= 0)
-                    {
-                        player.gameObject.SetActive(false);
-
-                        LoadLevel(GAME_OVER);
-                        PopGameState();
-                        PushGameState(GameState.GAME_OVER);
-                        PushGameState(GameState.LOADING);
-                    }
-                    
-                    return;
-                }
-                else if (playerDead)
-                {
-                    EntityManager.instance.ResetLevelEntities();
-                    deaths++;
-                    saveFile.deathCount = deaths;
-                    EntityManager.instance.UpdateDeathCount(deaths); //will be moved to EM
-                }
                 break;
 
             case GameState.GAME_OVER:
@@ -196,6 +165,35 @@ public class GameManager : MonoBehaviour
             case GameState.WIN:
                 break;
         }
+    }
+
+    private void HandlePlayerDeathGM()
+    {
+        if (!classicMode)
+        {
+            deaths++;
+            EntityManager.instance.UpdateDeathCount(deaths);
+            saveFile.deathCount = deaths;
+            GameSaver.SaveData(saveFile, dataPath);
+        }
+        else
+        {
+            lives--;
+            EntityManager.instance.UpdateDeathCount(lives);
+            saveFile.lifeCount = lives;
+            GameSaver.SaveData(saveFile, dataPath);
+
+            if (lives <= 0)
+            {
+                player.gameObject.SetActive(false);
+
+                LoadLevel(GAME_OVER);
+                PopGameState();
+                PushGameState(GameState.GAME_OVER);
+                PushGameState(GameState.LOADING);
+            }
+        }
+
     }
 
     private void OnStateEntered() //similar to entry requirement for class game states- future...
@@ -219,7 +217,8 @@ public class GameManager : MonoBehaviour
                 {
                     EntityManager.instance.UpdateDeathCount(deaths);
                 }
-                player = GameObject.Find("Player").GetComponent<Player>();
+                player = FindObjectOfType<Player>();
+                player.onPlayerDeath += HandlePlayerDeathGM;
                 //code to fix player dropping input on load scene here
 
                 saveFile.currentLevel = levelIndex;

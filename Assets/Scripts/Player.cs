@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -132,6 +133,8 @@ public class Player : RaycastController, ILockable, IResettable
     public AudioClip flipGravitySound;
 
     public bool debug;
+
+    public event Action onPlayerDeath;
 
     protected override void Start()
     {
@@ -335,7 +338,6 @@ public class Player : RaycastController, ILockable, IResettable
         UpdatePowerupUI();
 
         dashing = false;
-        GameManager.instance.playerDead = false;
     }
 
     public Vector2 GetUserInput()
@@ -519,7 +521,7 @@ public class Player : RaycastController, ILockable, IResettable
     private void OnHazard()
     {
         dead = true;
-        GameManager.instance.playerDead = true;
+        onPlayerDeath();
         AudioPlayer.instance.PlaySound(playerDieSound);
     }
 

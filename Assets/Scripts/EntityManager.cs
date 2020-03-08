@@ -17,6 +17,8 @@ public class EntityManager : MonoBehaviour
 
     private List<IResettable> resettables = new List<IResettable>();
 
+    private Player player;
+
     private void Awake()
     {
         //singleton pattern from unity's roguelike tut
@@ -25,6 +27,8 @@ public class EntityManager : MonoBehaviour
 
         //find all objects in scene to be reset
         resettables = FindObjectsOfType<MonoBehaviour>().OfType<IResettable>().ToList();
+        player = FindObjectOfType<Player>();
+        player.onPlayerDeath += HandlePlayerDeathEM;
         
         if (GameManager.instance.ClassicMode())
         {
@@ -60,5 +64,10 @@ public class EntityManager : MonoBehaviour
             }
         }
         resettables.RemoveAll(r => r is PowerPlatform);
+    }
+
+    public void HandlePlayerDeathEM()
+    {
+        ResetLevelEntities();
     }
 }
