@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Player : RaycastController, ILockable, IResettable
+public class Player : DynamicActor, ILockable, IResettable
 {
     private enum CollisionType
     {
@@ -60,6 +60,7 @@ public class Player : RaycastController, ILockable, IResettable
     private const float WIND_SPEED = 4;
 
     //adding leniency to jumping after falling off plat 
+    [SerializeField]
     private bool canJump;
     private readonly float jumpLeniencyTime = 0.1f;
     private float jumpLeniencyTimer;
@@ -71,7 +72,7 @@ public class Player : RaycastController, ILockable, IResettable
     //variables to handle velocity/horz. movement
     private float moveSpeed = 8;
     private float xVelocitySmooth;
-    private Vector2 velocity;
+    // private Vector2 velocity;
     private const float TERMINAL_VEL = -27.5f; //ALSO TRY WITH 30F FOR TWISTY, test 2 builds
     private const float WATER_TERMINAL_VEL = -12f;
 
@@ -613,7 +614,7 @@ public class Player : RaycastController, ILockable, IResettable
         }
     }
 
-    public void Move(Vector2 velocity, bool standingOnPlatform = false)
+    public void Move(Vector2 moveDst, bool standingOnPlatform = false)
     {
         collisions.Reset(); //hasn't collided yet
         UpdateRaycastOrigins(); //change collisions
@@ -623,10 +624,16 @@ public class Player : RaycastController, ILockable, IResettable
             collisions.faceDir = (int)Mathf.Sign(velocity.x);
         }
 
-        HorizontalCollisions(ref velocity);
-
-        VerticalCollisions(ref velocity);
-
+        RaycastHit2D[] xHits = HorizontalCollisions(moveDst, collisionMask, collisions.faceDir);
+        foreach (RaycastHit2D hit in xHits)
+        {
+            ResolveCollisions(hit, CollisionType.HORIZONTAL, ref moveDst, collisions.faceDir);
+        }
+        RaycastHit2D[] yHits = VerticalCollisions(moveDst, collisionMask);
+        foreach (RaycastHit2D hit in yHits)
+        {
+            ResolveCollisions(hit, CollisionType.VERTICAL, ref moveDst, Mathf.Sign(moveDst.y));
+        }
 
         if (!collisions.collided)
         {
@@ -635,7 +642,7 @@ public class Player : RaycastController, ILockable, IResettable
             inWater = false;
         }
 
-        if (!collisions.hitHazard) transform.Translate(velocity);
+        if (!collisions.hitHazard) transform.Translate(moveDst);
 
         if (standingOnPlatform)
         {
@@ -650,59 +657,7 @@ public class Player : RaycastController, ILockable, IResettable
         }
     }
 
-    void HorizontalCollisions(ref Vector2 velocity)
-    {
-        float xDir = collisions.faceDir;
-        float rayLength = Mathf.Abs(velocity.x) + SKIN_WIDTH;
-
-        if (Mathf.Abs(velocity.x) < SKIN_WIDTH)
-        {
-            rayLength = 2 * SKIN_WIDTH; //cast farther if not moving
-        }
-
-        for (int i = 0; i < horizontalRayCount; i++)
-        {
-            Vector2 rayOrigin = (xDir == -1) ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
-            rayOrigin += Vector2.up * (horizontalRaySpace * i);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.right * xDir, rayLength, collisionMask);
-
-            hits = hits.Concat(Physics2D.BoxCastAll(transform.position, Vector2.one * 0.985f, 0, Vector2.zero, 0, collisionMask)).ToArray();
-            Debug.DrawRay(rayOrigin, Vector2.right * xDir, Color.red);
-
-            if (hits.Length != 0)
-            {
-                foreach (RaycastHit2D hit in hits)
-                {
-                    ResolveCollisions(hit, CollisionType.HORIZONTAL, ref velocity, xDir, ref rayLength);
-                }
-            }
-        }
-    }
-
-    void VerticalCollisions(ref Vector2 velocity)
-    {
-        float yDir = Mathf.Sign(velocity.y);
-        float rayLength = Mathf.Abs(velocity.y) + SKIN_WIDTH;
-
-        for (int i = 0; i < verticalRayCount; i++)
-        {
-            Vector2 rayOrigin = (yDir == -1) ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
-            rayOrigin += Vector2.right * (verticalRaySpace * i + velocity.x);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(rayOrigin, Vector2.up * yDir, rayLength, collisionMask);
-
-            Debug.DrawRay(rayOrigin, Vector2.up * yDir, Color.red);
-
-            if (hits.Length != 0)
-            {
-                foreach (RaycastHit2D hit in hits)
-                {
-                    ResolveCollisions(hit, CollisionType.VERTICAL, ref velocity, yDir, ref rayLength);
-                }
-            }
-        }
-    }
-
-    void ResolveCollisions(RaycastHit2D hit, CollisionType collisionType, ref Vector2 velocity, float moveDir, ref float rayLength)
+    void ResolveCollisions(RaycastHit2D hit, CollisionType collisionType, ref Vector2 moveDst, float moveDir) //, ref float rayLength)
     {
         collisions.collided = true;
 
@@ -798,8 +753,7 @@ public class Player : RaycastController, ILockable, IResettable
 
         if (collisionType == CollisionType.VERTICAL)
         {
-            velocity.y = (hit.distance - SKIN_WIDTH) * moveDir;
-            rayLength = hit.distance;
+            moveDst.y = Mathf.Min(Mathf.Abs(moveDst.y), (hit.distance - SKIN_WIDTH)) * moveDir;
 
             if (!gravityFlipped)
             {
@@ -814,8 +768,7 @@ public class Player : RaycastController, ILockable, IResettable
         }
         else
         {
-            velocity.x = Mathf.Min(Mathf.Abs(velocity.x), (hit.distance - SKIN_WIDTH)) * moveDir;
-            rayLength = Mathf.Min(Mathf.Abs(velocity.x) + SKIN_WIDTH, hit.distance);
+            moveDst.x = Mathf.Min(Mathf.Abs(moveDst.x), (hit.distance - SKIN_WIDTH)) * moveDir;
 
             collisions.left = moveDir == -1;
             collisions.right = moveDir == 1;

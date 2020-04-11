@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
     private Stack<GameState> stateStack = new Stack<GameState>();
     private SaveFile saveFile;
     private string dataPath;
+
     public static GameManager instance = null;
 
     private int levelIndex;
@@ -48,7 +49,6 @@ public class GameManager : MonoBehaviour
         dataPath = Path.Combine(Application.persistentDataPath, "savedata.dat");
 
         DontDestroyOnLoad(gameObject);
-
     }
 
     void Start()

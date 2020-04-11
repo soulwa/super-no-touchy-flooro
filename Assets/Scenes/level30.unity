@@ -5720,6 +5720,7 @@ MonoBehaviour:
   speed: 5
   waitTime: 0
   easeAmount: 0
+  spawnPoint: {x: 0, y: 0}
 --- !u!1001 &1590401061
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6346,7 +6347,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4228397299386612, guid: 429492e6d6b1d4f47a2b8c6e80956470, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.2
+      value: 1.28
       objectReference: {fileID: 0}
     - target: {fileID: 4228397299386612, guid: 429492e6d6b1d4f47a2b8c6e80956470, type: 3}
       propertyPath: m_LocalPosition.z
