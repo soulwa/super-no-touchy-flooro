@@ -240,7 +240,7 @@ public class GameManager : MonoBehaviour
                 break;
 
             case GameState.WIN:
-                AudioPlayer.instance.PlayMusic(Menu.instance.menuMusic); //eventually move this to menu or remove menu entirely... seems annoying to put here
+                // AudioPlayer.instance.PlayMusic(Menu.instance.menuMusic); //eventually move this to menu or remove menu entirely... seems annoying to put here
                 Text deathCount = GameObject.Find("deathcount").GetComponent<Text>();
                 Text secret = GameObject.Find("secret").GetComponent<Text>();
                 if (classicMode)
